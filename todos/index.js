@@ -40,6 +40,12 @@ const menuTemplate = [
                 }
             },
             {
+                label:'Clear Todos',
+                click(){
+                    mainWindow.webContents.send('todo:clear');
+                }
+            },
+            {
                 label:'Quit',
                 click(){
                     app.quit();
@@ -56,6 +62,7 @@ if(process.env.NODE_ENV !== 'production'){
     menuTemplate.push({
         label: 'Developer',
         submenu:[
+            {role:'reload'},
             {
                 label:"Toggle Developer Tools",
                 accelerator:process.platform === 'darwin' ? 'Command+Alt+I' : "Ctrl+Shift+I",
