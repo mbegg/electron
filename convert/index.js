@@ -5,7 +5,8 @@ const _ = require('lodash')
 const {
     app,
     BrowserWindow,
-    ipcMain
+    ipcMain,
+    shell
 } = electron
 
 let mainWindow
@@ -34,16 +35,42 @@ ipcMain.on('videos:added', (event, videos) => {
     })
 
     Promise.all(promises).then((results) => {
-        mainWindow.webContents.send('metadata:complete',results)
+        mainWindow.webContents.send('metadata:complete', results)
     })
 })
 
-ipcMain.on('conversion:start',(event,videos)=>{
-    const video = videos[0]
-    const outputDir = video.path.split(video.name)[0]
-    const outputName = video.name.split('.')[0]
-    const outputPath = `${outputDir}${outputName}.${video.format}`
-    console.log(outputPath)
-    // ffmpeg(video.path)
-    // .output()
-})
+ipcMain.on('conversion:start', (event, videos) => {
+
+    _.each(videos, video => {
+  
+      const outputDirectory = video.path.split(video.name)[0]
+  
+      const outputName = video.name.split('.')[0]
+  
+      const outputPath = `${outputDirectory}${outputName}.${video.format}`
+  
+  
+  
+      ffmpeg(video.path)
+  
+        .output(outputPath)
+
+        .on('progress',({timemark})=>{
+           mainWindow.webContents.send('conversion:progress', { video, timemark })
+        })
+  
+        .on('end', () =>
+  
+          mainWindow.webContents.send('conversion:end', { video, outputPath })
+  
+        )
+  
+        .run()
+  
+    })
+  
+  })
+
+  ipcMain.on('folder:open',(event,outputPath)=>{
+    shell.showItemInFolder(outputPath)
+  })
